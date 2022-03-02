@@ -158,6 +158,7 @@ export default {
       dropdownItems: [
         { name: "String", code: "String" },
         { name: "Number", code: "Number" },
+        { name: "Date", code: "Date" },
         { name: "Complex", code: "Complex" },
       ],
       dropdownItems1: [],
