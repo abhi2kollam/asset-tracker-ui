@@ -3,6 +3,7 @@ import 'primevue/resources/primevue.min.css';
 import 'primeflex/primeflex.css';
 import 'primeicons/primeicons.css';
 import 'prismjs/themes/prism-coy.css';
+import { loadProgressBar } from 'axios-progress-bar'
 
 import PrimeVue from 'primevue/config';
 import AutoComplete from 'primevue/autocomplete';
@@ -199,3 +200,4 @@ app.component('TriStateCheckbox', TriStateCheckbox);
 app.component('BlockViewer', BlockViewer);
 
 app.mount('#app');
+loadProgressBar()

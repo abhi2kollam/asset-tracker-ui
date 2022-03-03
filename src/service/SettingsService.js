@@ -1,5 +1,19 @@
 import axios from "axios";
 export default class SettingsService {
+	getSpecificSettingList(id) {
+		return axios
+			.get(`/api/inventory-settings/get-list/${id}`)
+			.then((res) => res.data)
+			.catch((d) => d.data);
+	}
+
+	getSpecificSetting(id) {
+		return axios
+			.get(`/api/inventory-settings/get/${id}`)
+			.then((res) => res.data)
+			.catch((d) => d.data);
+	}
+
 	getSettingsList() {
 		return axios
 			.get("/api/inventory-settings/list")

@@ -20,16 +20,14 @@
       @change-theme="changeTheme"
     />
     <transition name="layout-mask">
-      <div
-        class="layout-mask p-component-overlay"
-        v-if="mobileMenuActive"
-      ></div>
+      <div class="layout-mask p-component-overlay" v-if="mobileMenuActive"></div>
     </transition>
   </div>
 </template>
 
 <script>
 import { find, map } from "lodash";
+import EventBus from './AppEventBus';
 import AppTopBar from "./AppTopbar.vue";
 import AppMenu from "./AppMenu.vue";
 import AppConfig from "./AppConfig.vue";
@@ -91,25 +89,6 @@ export default {
               icon: "fas fa-print",
               to: "/invalidstate",
             },
-          ],
-        },
-
-        {
-          label: "Asset Settings",
-          icon: "pi pi-fw pi-clone",
-          items: [
-            { label: "Desktop", icon: "fas fa-desktop", to: "/cruds" },
-            { label: "Laptop", icon: "fas fa-laptop", to: "/landing" },
-            {
-              label: "Mac",
-              icon: "fab fa-apple",
-              to: "/timeline",
-            },
-            {
-              label: "Printers",
-              icon: "fas fa-print",
-              to: "/timeline",
-            },
             {
               label: "New Asset Type",
               icon: "pi pi-fw pi-plus-circle",
@@ -119,7 +98,7 @@ export default {
         },
         {
           label: "Inventory Settings",
-          id:"inv-setting",
+          id: "inv-setting",
           icon: "pi pi-fw pi-clone",
           items: [
             {
@@ -133,20 +112,29 @@ export default {
     };
   },
   settingsService: null,
+  reloadSettingsListener: null,
   created() {
     this.settingsService = new SettingsService();
   },
   async mounted() {
-    this.settings = await this.settingsService.getSettingsList();
-    const settingsMenu = find(this.menu, { id: "inv-setting" });
-    const items = map(this.settings, (setting) => {
-      return {
-        label: setting.name,
-        icon: setting.icon.code,
-        to: `/settings/${setting.id}`,
-      };
-    });
-    settingsMenu.items.unshift(...items);
+    this.reloadSettingsListener = async () => {
+      const settings = await this.settingsService.getSettingsList();
+      const settingsMenu = find(this.menu, { id: "inv-setting" });
+      settingsMenu.items = settingsMenu.items.slice(-1);
+      const items = map(settings, (setting) => {
+        return {
+          label: setting?.name,
+          icon: setting?.icon?.code,
+          to: `/settings/${setting?.id}`,
+        };
+      });
+      settingsMenu.items.unshift(...items);
+    }
+    this.reloadSettingsListener();
+    EventBus.on('reload-settings', this.reloadSettingsListener);
+  },
+  beforeUnmount() {
+    EventBus.on('reload-settings', this.reloadSettingsListener)
   },
   watch: {
     $route() {

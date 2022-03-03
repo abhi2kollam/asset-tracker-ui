@@ -1,14 +1,19 @@
 /* eslint-disable vue/valid-v-for */
 <template>
-  <div class="card col-10">
-    <div class="p-fluid">
-      <h5>New Settings</h5>
+  <form @submit.prevent="saveSettings(!v$.$invalid)" class="p-fluid">
+    <div class="card col">
+      <h5>New {{type}}</h5>
       <div class="field grid">
-        <label for="name3" class="col-12 mb-2 md:col-2 md:mb-0"
-          >Settings Name</label
-        >
+        <label for="name3" class="col-12 mb-2 md:col-2 md:mb-0">{{type}} Name</label>
         <div class="col-12 md:col-10">
-          <InputText id="name3" type="text" v-model="setting.name" />
+          <InputText
+            :class="{ 'p-invalid': v$.setting.name.$invalid }"
+            id="name3"
+            maxlength="30"
+            required
+            type="text"
+            v-model="setting.name"
+          />
         </div>
       </div>
       <div class="field grid">
@@ -16,6 +21,7 @@
         <div class="col-12 md:col-10">
           <Dropdown
             v-model="setting.icon"
+            :class="{ 'p-invalid': v$.setting.icon.$invalid }"
             :options="fontAwesomeIcons"
             optionLabel="name"
             placeholder="Select icon"
@@ -25,21 +31,9 @@
             <template #value="slotProps">
               <div
                 v-if="slotProps.value"
-                class="
-                  inline-flex
-                  align-items-center
-                  py-1
-                  px-2
-                  bg-primary
-                  text-primary
-                  border-round
-                  mr-2
-                "
+                class="inline-flex align-items-center py-1 px-2 bg-primary text-primary border-round mr-2"
               >
-                <span
-                  :class="'mr-2 ' + slotProps.value.code"
-                  style="width: 18px; height: 12px"
-                />
+                <span :class="'mr-2 ' + slotProps.value.code" style="width: 18px; height: 12px" />
                 <div>{{ slotProps.value.name }}</div>
               </div>
               <template v-if="!slotProps.value || slotProps.value.length === 0">
@@ -48,100 +42,106 @@
             </template>
             <template #option="slotProps">
               <div class="flex align-items-center">
-                <span
-                  :class="'mr-2 ' + slotProps.option.code"
-                  style="width: 18px; height: 12px"
-                />
+                <span :class="'mr-2 ' + slotProps.option.code" style="width: 18px; height: 12px" />
                 <div>{{ slotProps.option.name }}</div>
               </div>
             </template>
           </Dropdown>
         </div>
       </div>
-      <Fieldset
-        :legend="`Property ${index + 1}`"
-        v-for="(prop, index) in setting.props"
-        :key="index"
-        class="mb-2 relative"
-      >
+      <div class="grid justify-content-end mt-3">
         <Button
-          icon="pi pi-times "
-          @click="deleteProp(index)"
-          class="p-button-rounded p-button-warning mr-2 mb-2 close-icon"
+          style="width:initial"
+          label="Add New Property"
+          icon="pi pi-plus-circle"
+          @click="addMoreProps()"
         />
-        <div class="field grid">
-          <label for="email3" class="col-12 mb-2 md:col-2 md:mb-0"
-            >Property Name</label
-          >
-          <div class="col-12 md:col-10">
-            <InputText  type="text" v-model.lazy="prop.name" />
-          </div>
-        </div>
-        <div class="field grid">
-          <label  class="col-12 mb-2 md:col-2 md:mb-0"></label>
-          <div class="col-12 md:col-10 field-checkbox">
-            <Checkbox
-              :id="`checkOption-${index}`"
-              :binary="true"
-              name="option"
-              v-model="prop.isUnique"
+      </div>
+      <div class="grid">
+        <div class="col-12 xl:col-6" v-for="(prop, index) in setting.props" :key="index">
+          <Fieldset :legend="`Property ${index + 1}`" class="mb-2 relative">
+            <Button
+              icon="pi pi-times "
+              @click="deleteProp(index)"
+              class="p-button-rounded p-button-warning mr-2 mb-2 close-icon"
             />
-            <label :for="`checkOption-${index}`">Unique property</label>
-          </div>
+            <div class="field grid">
+              <label for="email3" class="col-12 mb-2 md:col-2 md:mb-0">Property Name</label>
+              <div class="col-12 md:col-10">
+                <InputText
+                  type="text"
+                  :class="{ 'p-invalid': v$.setting.props.$each.$response.$data[index].name.$invalid }"
+                  maxlength="30"
+                  v-model.lazy="prop.name"
+                />
+              </div>
+            </div>
+            <div class="field grid">
+              <label class="col-12 mb-2 md:col-2 md:mb-0"></label>
+              <div class="col-12 md:col-10 field-checkbox">
+                <Checkbox
+                  :id="`checkOption-${index}`"
+                  :binary="true"
+                  name="option"
+                  v-model="prop.isUnique"
+                />
+                <label :for="`checkOption-${index}`">Unique property</label>
+              </div>
+            </div>
+            <div class="field grid">
+              <label for="name3" class="col-12 mb-2 md:col-2 md:mb-0">Type</label>
+              <div class="col-12 md:col-10">
+                <Dropdown
+                  id="state"
+                  v-model="prop.type"
+                  :options="dropdownItems"
+                  optionValue="code"
+                  optionLabel="name"
+                  placeholder="Select Type"
+                ></Dropdown>
+              </div>
+            </div>
+            <div class="field grid" v-if="prop.type === 'Complex'">
+              <label for="name3" class="col-12 mb-2 md:col-2 md:mb-0">Complex Type</label>
+              <div class="col-12 md:col-10">
+                <Dropdown
+                  id="state"
+                  v-model="prop.complexType"
+                  :options="dropdownItems1"
+                  optionLabel="name"
+                  optionValue="code"
+                  placeholder="Select One"
+                ></Dropdown>
+              </div>
+            </div>
+          </Fieldset>
         </div>
-        <div class="field grid">
-          <label for="name3" class="col-12 mb-2 md:col-2 md:mb-0">Type</label>
-          <div class="col-12 md:col-10">
-            <Dropdown
-              id="state"
-              v-model="prop.type"
-              :options="dropdownItems"
-              optionValue="code"
-              optionLabel="name"
-              placeholder="Select Type"
-            ></Dropdown>
-          </div>
-        </div>
-        <div class="field grid" v-if="prop.type === 'Complex'">
-          <label for="name3" class="col-12 mb-2 md:col-2 md:mb-0"
-            >Complex Type</label
-          >
-          <div class="col-12 md:col-10">
-            <Dropdown
-              id="state"
-              v-model="prop.complexType"
-              :options="dropdownItems1"
-              optionLabel="name"
-              optionValue="code"
-              placeholder="Select One"
-            ></Dropdown>
-          </div>
-        </div>
-      </Fieldset>
+      </div>
     </div>
-    <div class="grid justify-content-end mt-3">
+    <div class="grid col justify-content-end mt-3">
       <Button
-        label="Add New Property"
-        icon="pi pi-plus-circle"
-        @click="addMoreProps()"
+        label="Save"
+        type="submit"
+        :disabled="setting.props.length === 0"
+        icon="pi pi-check"
+        class="p-button-success submit-button"
       />
     </div>
-  </div>
-  <div class="grid col-10 justify-content-end mt-3">
-    <Button
-      label="Save"
-      :disabled="setting.props.length === 0"
-      icon="pi pi-check"
-      class="p-button-success"
-      @click="saveSettings()"
-    />
-  </div>
+  </form>
 </template>
 
-<script>
+<script lang="typescript">
 import { map } from "lodash";
+import useVuelidate from '@vuelidate/core'
+import { required, helpers } from '@vuelidate/validators'
+
+import EventBus from "../AppEventBus";
 import SettingsService from "../service/SettingsService";
 export default {
+  setup() {
+    return { v$: useVuelidate() }
+  },
+  props:['type'],
   data() {
     return {
       defaultProps: {
@@ -152,7 +152,10 @@ export default {
       },
       setting: {
         name: "",
-        icon: null,
+        icon: {
+          "code": "fas fa-file",
+          "name": "file"
+        },
         props: [],
       },
       dropdownItems: [
@@ -165,6 +168,19 @@ export default {
       fontAwesomeIcons: [],
     };
   },
+  validations() {
+    return {
+      setting: {
+        name: { required },
+        icon: { required },
+        props: {
+          $each: helpers.forEach({
+            name: { required }
+          })
+        }
+      }
+    }
+  },
   created() {
     this.settingsService = new SettingsService();
   },
@@ -172,25 +188,39 @@ export default {
     this.setting.props = [{ ...this.defaultProps }];
   },
   async mounted() {
-    this.fontAwesomeIcons = await this.settingsService.getFontIcons();
-    const savedSettings = await this.settingsService.getSettingsList();
+    const [fontAwesomeIcons, savedSettings] = await Promise.all([this.settingsService.getFontIcons(), this.settingsService.getSettingsList()])
+    this.fontAwesomeIcons = fontAwesomeIcons;
     this.dropdownItems1 = map(savedSettings, (setting) => {
       return {
         name: setting.name,
-        code: setting.name,
+        code: setting.id,
       };
     });
   },
   methods: {
     addMoreProps() {
       this.setting.props.push({ ...this.defaultProps });
+      this.v$.setting.props.reset()
     },
-    saveSettings() {
-      this.settingsService.saveSettings(this.setting);
+    async saveSettings(isFormValid) {
+      if (!isFormValid) {
+        return;
+      }
+      await this.settingsService.saveSettings(this.setting);
+      this.clearForm()
+      EventBus.emit("reload-settings")
     },
     deleteProp(index) {
       this.setting.props.splice(index, 1);
     },
+    clearForm() {
+      this.setting = {
+        name: "",
+        icon: null,
+        props: [],
+      }
+      this.setting.props = [{ ...this.defaultProps }];
+    }
   },
 };
 </script>
@@ -199,5 +229,8 @@ export default {
   position: absolute;
   top: -3rem;
   right: -1rem;
+}
+.submit-button {
+  width: initial;
 }
 </style>
